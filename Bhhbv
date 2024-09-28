@@ -1,1 +1,9 @@
+local args = {
+    [1] = "S_Auras_Toggle_Equip",
+    [2] = {
+        [1] = "Godly"
+    }
+}
+
+game:GetService("ReplicatedStorage").Common.Library.Network.RemoteFunction:InvokeServer(unpack(args))
 
