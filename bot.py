@@ -93,7 +93,7 @@ async def gen_key(interaction: discord.Interaction):
                 data = await response.json()
                 await interaction.response.send_message(data, ephemeral=True)  # Make the message ephemeral
             else:
-                await interaction.response.send_message("Failed to retrieve data from the API.", ephemeral=True)
+                await interaction.response.send_message(data, ephemeral=True)
                 
 @bot.tree.command(name="hydro_gen")
 async def hydro_gen(interaction: discord.Interaction):
