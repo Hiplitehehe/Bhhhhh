@@ -19,7 +19,8 @@ def run_flask():
 # Load your token from an environment variable or file
 TOKEN = os.getenv('TOKEN')  # Set your bot token as an environment variable
 
-print(os.getenv('TOKEN')
+print(os.getenv('TOKEN'))
+
 # Create a bot instance
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
 
