@@ -106,17 +106,6 @@ async def gen_key(interaction: discord.Interaction):
             embed.add_field(name="Error", value=str(e), inline=False)
             await interaction.response.send_message(embed=embed, ephemeral=True)
             
-@bot.tree.command(name="gen_key")
-async def gen_key(interaction: discord.Interaction):
-    """Generate a key from the external API."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
-            if response.status == 201:
-                data = await response.json()
-                await interaction.response.send_message(data, ephemeral=True)  # Make the message ephemeral
-            else:
-                await interaction.response.send_message(data, ephemeral=True)
-                
 @bot.tree.command(name="hydro_gen")
 async def hydro_gen(interaction: discord.Interaction):
     """Get a random Hydro HWID."""
