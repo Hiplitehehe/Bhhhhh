@@ -2,3 +2,4 @@ discord.py
 Flask
 requests
 bs4
+flask_cors
