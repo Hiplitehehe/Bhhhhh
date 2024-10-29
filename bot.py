@@ -5,7 +5,7 @@ import aiohttp
 import os
 
 # Load your token from an environment variable or file
-TOKEN = ('token')  # Set your bot token as an environment variable
+TOKEN = os.getenv('token')  # Set your bot token as an environment variable
 
 # Create a bot instance
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
