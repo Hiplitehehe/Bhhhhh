@@ -17,7 +17,7 @@ def run_flask():
     flask_app.run(host='0.0.0.0', port=5000)
 
 # Load your token from an environment variable or file
-TOKEN = os.getenv('TOKEN')  # Set your bot token as an environment variable
+TOKEN = 'MTI4OTg0NjU4NzMzMzU0NjA3Mw.GvwGWW.9YReO6OWMDljr4eSY-oSs9IzYPVNboQtEwx2Fs'  # Set your bot token as an environment variable
 
 print(os.getenv('TOKEN'))
 
