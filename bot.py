@@ -84,6 +84,17 @@ async def delta_gen(interaction: discord.Interaction):
             data = await response.json()
             await interaction.response.send_message(data)
 
+@bot.tree.command(name="gen_key")
+async def gen_key(interaction: discord.Interaction):
+    """Generate a key from the external API."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
+            if response.status == 200:
+                data = await response.json()
+                await interaction.response.send_message(data, ephemeral=True)  # Make the message ephemeral
+            else:
+                await interaction.response.send_message("Failed to retrieve data from the API.", ephemeral=True)
+                
 @bot.tree.command(name="hydro_gen")
 async def hydro_gen(interaction: discord.Interaction):
     """Get a random Hydro HWID."""
