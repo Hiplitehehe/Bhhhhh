@@ -29,6 +29,13 @@ async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print('------')
 
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
+    # Sync commands here
+    await bot.tree.sync()
+    print("Commands synced")
+
 @bot.tree.command(name="fluxus")
 async def fluxus(interaction: discord.Interaction, link: str):
     """Fetch Fluxus data."""
