@@ -13,7 +13,7 @@ import os
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-token = os.getenv(token)
+token = os.getenv('token')
 
 # Flask API setup
 app = Flask(__name__)
