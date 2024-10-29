@@ -29,14 +29,8 @@ API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
-    print('------')
+    print("Bot is ready")
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
-    # Sync commands here
-    await bot.tree.sync()
-    print("Commands synced")
 
 @bot.tree.command(name="fluxus")
 async def fluxus(interaction: discord.Interaction, link: str):
