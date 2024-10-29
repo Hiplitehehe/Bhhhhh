@@ -76,14 +76,36 @@ async def arc_gen(interaction: discord.Interaction):
             data = await response.json()
             await interaction.response.send_message(data)
 
-@bot.tree.command(name="delta_gen")
-async def delta_gen(interaction: discord.Interaction):
-    """Get a random Delta HWID."""
+@bot.tree.command(name="gen_key")
+async def gen_key(interaction: discord.Interaction):
+    """Generate a key from the external API."""
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/delta_gen") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
+        try:
+            async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
+                response_data = await response.json()
 
+                # Create an embed object
+                embed = discord.Embed(title="API Response", color=discord.Color.blue())
+
+                if response.status == 201:
+                    # Assuming the API returns a JSON object with 'key' and 'expire' fields
+                    key = response_data.get('key', 'No key available')
+                    expire = response_data.get('expire', 'No expiration provided')
+
+                    embed.add_field(name="Generated Key", value=key, inline=False)
+                    embed.add_field(name="Expiration Time", value=expire, inline=False)
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                else:
+                    # Show the API response even on error status codes
+                    embed.add_field(name="Error", value=f"Received status code {response.status}", inline=False)
+                    embed.add_field(name="Response", value=str(response_data), inline=False)
+                    await interaction.response.send_message(embed=embed, ephemeral=True)
+        except Exception as e:
+            # If there's an exception, show the error
+            embed = discord.Embed(title="Exception Occurred", color=discord.Color.red())
+            embed.add_field(name="Error", value=str(e), inline=False)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            
 @bot.tree.command(name="gen_key")
 async def gen_key(interaction: discord.Interaction):
     """Generate a key from the external API."""
