@@ -3,6 +3,18 @@ from discord.ext import commands
 from discord import app_commands
 import aiohttp
 import os
+from threading import Thread
+from flask import Flask, jsonify
+
+# Create a Flask app
+flask_app = Flask(__name__)
+
+@flask_app.route('/status', methods=['GET'])
+def status():
+    return jsonify({"status": "API is running"})
+
+def run_flask():
+    flask_app.run(host='0.0.0.0', port=5000)
 
 # Load your token from an environment variable or file
 TOKEN = os.getenv('token')  # Set your bot token as an environment variable
@@ -82,12 +94,16 @@ async def boost_ink(interaction: discord.Interaction, url: str):
             await interaction.response.send_message(data)
 
 @bot.tree.command(name="status")
-async def status(interaction: discord.Interaction):
+async def check_status(interaction: discord.Interaction):
     """Check the health of the API."""
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{API_BASE_URL}/status") as response:
             data = await response.json()
             await interaction.response.send_message(data)
+
+# Start the Flask app in a separate thread
+flask_thread = Thread(target=run_flask)
+flask_thread.start()
 
 # Start the bot
 bot.run(TOKEN)
