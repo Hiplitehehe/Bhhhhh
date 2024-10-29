@@ -31,6 +31,12 @@ async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print("Bot is ready")
 
+@bot.tree.command(name="sync_commands")
+async def sync_commands(interaction: discord.Interaction):
+    """Manually sync commands."""
+    await bot.tree.sync()
+    await interaction.response.send_message("Commands synced!", ephemeral=True)
+
 
 @bot.tree.command(name="fluxus")
 async def fluxus(interaction: discord.Interaction, link: str):
