@@ -89,7 +89,7 @@ async def gen_key(interaction: discord.Interaction):
     """Generate a key from the external API."""
     async with aiohttp.ClientSession() as session:
         async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
-            if response.status == 200:
+            if response.status == 201:
                 data = await response.json()
                 await interaction.response.send_message(data, ephemeral=True)  # Make the message ephemeral
             else:
