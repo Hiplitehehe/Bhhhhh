@@ -22,7 +22,7 @@ TOKEN = os.getenv('token')  # Set your bot token as an environment variable
 # Create a bot instance
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
 
-API_BASE_URL = "http://127.0.0.1:5000"  # Replace with your actual API domain
+API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
 
 @bot.event
 async def on_ready():
