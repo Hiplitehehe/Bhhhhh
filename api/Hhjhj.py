@@ -131,5 +131,5 @@ flask_thread = Thread(target=run_flask)
 flask_thread.start()
 
 # Start the bot
-bot.run(token)
+bot.run(TOKEN)
 
