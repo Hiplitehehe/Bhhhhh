@@ -28,101 +28,90 @@ INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073
 async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print("Bot is ready.")
+    await bot.tree.sync()  # Sync slash commands with Discord
 
-class CommandView(discord.ui.View):
-    """A view that contains command buttons."""
-    
-    @discord.ui.button(label="Fluxus", style=discord.ButtonStyle.primary)
-    async def fluxus_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "fluxus")
+@bot.tree.command(name="fluxus")
+async def fluxus(interaction: discord.Interaction, link: str = None):
+    """Handle the Fluxus command with an optional link."""
+    async with aiohttp.ClientSession() as session:
+        # Use the provided link or mention the user if no link is given
+        if link is None:
+            link = interaction.user.mention
+        async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Fluxus Data", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=True)  # Set ephemeral to False
 
-    @discord.ui.button(label="Blox Fruits Stock", style=discord.ButtonStyle.primary)
-    async def bloxfruits_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "bloxfruits_stock")
+@bot.tree.command(name="bloxfruits_stock")
+async def bloxfruits_stock(interaction: discord.Interaction):
+    """Handle the Blox Fruits Stock command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Blox Fruits Stock", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-    @discord.ui.button(label="Add Link", style=discord.ButtonStyle.primary)
-    async def addlink_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "addlink")
+@bot.tree.command(name="addlink")
+async def addlink(interaction: discord.Interaction, url: str):
+    """Handle the Add Link command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Add Link", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-    @discord.ui.button(label="Flux Gen", style=discord.ButtonStyle.primary)
-    async def flux_gen_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "flux_gen")
+@bot.tree.command(name="flux_gen")
+async def flux_gen(interaction: discord.Interaction):
+    """Handle the Flux Gen command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/flux_gen") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Random Flux HWID", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-    @discord.ui.button(label="Arc Gen", style=discord.ButtonStyle.primary)
-    async def arc_gen_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "arc_gen")
+@bot.tree.command(name="arc_gen")
+async def arc_gen(interaction: discord.Interaction):
+    """Handle the Arc Gen command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/arc_gen") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Random Arc HWID", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-    @discord.ui.button(label="Generate Key", style=discord.ButtonStyle.primary)
-    async def gen_key_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "gen_key")
+@bot.tree.command(name="gen_key")
+async def gen_key(interaction: discord.Interaction):
+    """Handle the Generate Key command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
+            response_data = await response.json()
+            
+            if response.status == 201:
+                key = response_data.get('key')
+                await interaction.response.send_message("Key generation was successful!", ephemeral=False)  # First message
+                await interaction.followup.send(f"Generated Key: {key}", ephemeral=True)  # Second message
+            else:
+                await interaction.response.send_message("Failed to generate a key.", ephemeral=False)  # Single failure message
 
-    @discord.ui.button(label="Status", style=discord.ButtonStyle.primary)
-    async def status_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await self.execute_command(interaction, "status")
+@bot.tree.command(name="status")
+async def status_command(interaction: discord.Interaction):
+    """Handle the Status command."""
+    embed = discord.Embed(title="Bot Status", description="The bot is online and running!")
+    await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-    async def execute_command(self, interaction: discord.Interaction, command: str):
-        """Execute the command based on the button clicked."""
-        async with aiohttp.ClientSession() as session:
-            if command == "fluxus":
-                link = interaction.user.mention  # Use user mention or prompt for input
-                async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
-                    data = await response.json()
-                    embed = discord.Embed(title="Fluxus Data", description=data)
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "bloxfruits_stock":
-                async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
-                    data = await response.json()
-                    embed = discord.Embed(title="Blox Fruits Stock", description=data)
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "addlink":
-                url = "http://example.com"  # Replace with actual user input handling
-                async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
-                    data = await response.json()
-                    embed = discord.Embed(title="Add Link", description=data)
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "flux_gen":
-                async with session.get(f"{API_BASE_URL}/flux_gen") as response:
-                    data = await response.json()
-                    embed = discord.Embed(title="Random Flux HWID", description=data)
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "arc_gen":
-                async with session.get(f"{API_BASE_URL}/arc_gen") as response:
-                    data = await response.json()
-                    embed = discord.Embed(title="Random Arc HWID", description=data)
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "gen_key":
-                async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
-                    response_data = await response.json()
-                    embed = discord.Embed(title="API Response", color=discord.Color.blue())
-
-                    if response.status == 201:
-                        key = response_data.get('key')
-                        embed.description = f"Generated Key: {key}"
-                    else:
-                        embed.description = "Failed to generate a key."
-                    await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-            elif command == "status":
-                embed = discord.Embed(title="Bot Status", description="The bot is online and running!")
-                await interaction.response.edit_message(embed=embed, view=add_invite_button())
-
-def add_invite_button():
-    """Add an 'Add Me!' button."""
-    button = discord.ui.Button(label="Add Me!", url=INVITE_URL)
-    view = discord.ui.View()
-    view.add_item(button)
-    return view
-
-@bot.command()
-async def commands(ctx):
-    """Send a message with command buttons."""
-    view = CommandView()
-    await ctx.send("Please select a command:", view=view)
+@bot.tree.command(name="commands")
+async def commands_list(interaction: discord.Interaction):
+    """Send a message with a list of available commands."""
+    command_list = """
+    **Available Commands:**
+    /fluxus - Handle the Fluxus command (optional link)
+    /bloxfruits_stock - Handle the Blox Fruits Stock command
+    /addlink <url> - Handle the Add Link command
+    /flux_gen - Handle the Flux Gen command
+    /arc_gen - Handle the Arc Gen command
+    /gen_key - Handle the Generate Key command
+    /status - Get the bot's status
+    """
+    await interaction.response.send_message(command_list, ephemeral=False)  # Set ephemeral to False
 
 # Run the bot
 bot.run(TOKEN)
