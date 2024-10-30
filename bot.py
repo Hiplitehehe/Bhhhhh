@@ -96,6 +96,11 @@ async def gen_key(interaction: discord.Interaction):
                     # Convert expiration timestamp if it's a valid integer
                     if isinstance(expire, int):
                         try:
+                            # Check if `expire` is in milliseconds (e.g., length > 10)
+                            if expire > 1_000_000_000_000:
+                                expire = expire / 1000  # Convert from milliseconds to seconds
+
+                            # Convert to human-readable format
                             expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
                         except ValueError:
                             expire = "Invalid expiration timestamp"
