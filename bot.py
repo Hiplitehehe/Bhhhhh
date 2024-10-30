@@ -13,7 +13,7 @@ def status():
 
 def run_flask():
     """Run the Flask app."""
-    flask_app.run(host='0.0.0.0', port=5000)
+    flask_app.run(host='0.0.0.0', port=5050)
 
 # Load your token from an environment variable or file
 TOKEN = os.getenv('token')  # Set your bot token as an environment variable
