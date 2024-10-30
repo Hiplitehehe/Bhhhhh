@@ -113,7 +113,7 @@ async def gen_key(interaction: discord.Interaction):
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
                 # Send a second success message
-                await interaction.followup.send("Command executed successfully!", ephemeral=True)
+                await interaction.followup.send("Command executed successfully!", ephemeral=False)
 
         except Exception as e:
             # If there's an exception, show the error in an embed
