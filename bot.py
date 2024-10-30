@@ -113,5 +113,9 @@ async def commands_list(interaction: discord.Interaction):
     """
     await interaction.response.send_message(command_list, ephemeral=False)  # Set ephemeral to False
 
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.start()
+
+
 # Run the bot
 bot.run(TOKEN)
