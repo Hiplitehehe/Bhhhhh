@@ -5,6 +5,7 @@ import aiohttp
 import os
 from threading import Thread
 from flask import Flask, jsonify
+from datetime import datetime
 
 # Create a Flask app
 flask_app = Flask(__name__)
@@ -92,20 +93,29 @@ async def gen_key(interaction: discord.Interaction):
                     key = response_data.get('key', 'No key available')
                     expire = response_data.get('expire', 'No expiration provided')
 
+                    # Convert the expiration timestamp if available
+                    if isinstance(expire, int):
+                        expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        expire = "Invalid expiration format"
+
                     embed.add_field(name="Generated Key", value=key, inline=False)
                     embed.add_field(name="Expiration Time", value=expire, inline=False)
+                    embed.set_footer(text="Command executed successfully!")
                     await interaction.response.send_message(embed=embed, ephemeral=True)
                 else:
                     # Show the API response even on error status codes
                     embed.add_field(name="Error", value=f"Received status code {response.status}", inline=False)
                     embed.add_field(name="Response", value=str(response_data), inline=False)
+                    embed.set_footer(text="Command executed with an error response.")
                     await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
             # If there's an exception, show the error
             embed = discord.Embed(title="Exception Occurred", color=discord.Color.red())
             embed.add_field(name="Error", value=str(e), inline=False)
+            embed.set_footer(text="Command executed with an exception.")
             await interaction.response.send_message(embed=embed, ephemeral=True)
-            
+
 @bot.tree.command(name="hydro_gen")
 async def hydro_gen(interaction: discord.Interaction):
     """Get a random Hydro HWID."""
