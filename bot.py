@@ -24,7 +24,7 @@ TOKEN = os.getenv('token')  # Set your bot token as an environment variable
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
 
 API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
-INVITE_URL = "https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=YOUR_PERMISSIONS&scope=bot%20applications.commands"  # Replace with your bot's invite URL
+INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073&permissions=8&integration_type=0&scope=bot"  # Replace with your bot's invite URL
 
 @bot.event
 async def on_ready():
