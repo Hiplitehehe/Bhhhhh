@@ -85,7 +85,7 @@ async def gen_key(interaction: discord.Interaction):
             async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
                 response_data = await response.json()
 
-                # Create an embed object
+                # Create an embed object for the API response
                 embed = discord.Embed(title="API Response", color=discord.Color.blue())
 
                 if response.status == 201:
@@ -93,7 +93,7 @@ async def gen_key(interaction: discord.Interaction):
                     key = response_data.get('key', 'No key available')
                     expire = response_data.get('expire', 'No expiration provided')
 
-                    # Convert the expiration timestamp if available
+                    # Convert the expiration timestamp if it's an integer
                     if isinstance(expire, int):
                         expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
                     else:
@@ -101,21 +101,25 @@ async def gen_key(interaction: discord.Interaction):
 
                     embed.add_field(name="Generated Key", value=key, inline=False)
                     embed.add_field(name="Expiration Time", value=expire, inline=False)
-                    embed.set_footer(text="Command executed successfully!")
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
                 else:
                     # Show the API response even on error status codes
                     embed.add_field(name="Error", value=f"Received status code {response.status}", inline=False)
                     embed.add_field(name="Response", value=str(response_data), inline=False)
-                    embed.set_footer(text="Command executed with an error response.")
-                    await interaction.response.send_message(embed=embed, ephemeral=True)
+                
+                # Send the embed with the API response
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+                # Send a second success message
+                await interaction.followup.send("Command executed successfully!", ephemeral=True)
+
         except Exception as e:
-            # If there's an exception, show the error
+            # If there's an exception, show the error in an embed
             embed = discord.Embed(title="Exception Occurred", color=discord.Color.red())
             embed.add_field(name="Error", value=str(e), inline=False)
-            embed.set_footer(text="Command executed with an exception.")
             await interaction.response.send_message(embed=embed, ephemeral=True)
-
+            # Send a second message indicating failure
+            await interaction.followup.send("An error occurred while executing the command.", ephemeral=True)
+            
 @bot.tree.command(name="hydro_gen")
 async def hydro_gen(interaction: discord.Interaction):
     """Get a random Hydro HWID."""
