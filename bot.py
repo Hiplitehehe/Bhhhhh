@@ -93,9 +93,12 @@ async def gen_key(interaction: discord.Interaction):
                     key = response_data.get('key', 'No key available')
                     expire = response_data.get('expire', 'No expiration provided')
 
-                    # Convert the expiration timestamp if it's an integer
+                    # Convert expiration timestamp if it's a valid integer
                     if isinstance(expire, int):
-                        expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
+                        try:
+                            expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
+                        except ValueError:
+                            expire = "Invalid expiration timestamp"
                     else:
                         expire = "Invalid expiration format"
 
