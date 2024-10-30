@@ -29,128 +29,81 @@ API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API 
 async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print('------')
-
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
-    # Sync commands here
     await bot.tree.sync()
     print("Commands synced")
 
-@bot.tree.command(name="fluxus")
-async def fluxus(interaction: discord.Interaction, link: str):
-    """Fetch Fluxus data."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="bloxfruits_stock")
-async def bloxfruits_stock(interaction: discord.Interaction):
-    """Get Blox Fruits stock."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="addlink")
-async def addlink(interaction: discord.Interaction, url: str):
-    """Add a link."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="flux_gen")
-async def flux_gen(interaction: discord.Interaction):
-    """Get a random Flux HWID."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/flux_gen") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="arc_gen")
-async def arc_gen(interaction: discord.Interaction):
-    """Get a random Arc HWID."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/arc_gen") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="gen_key")
-async def gen_key(interaction: discord.Interaction):
-    """Generate a key from the external API."""
+@bot.tree.command(name="multi_command")
+@app_commands.describe(
+    option="Choose an option to execute",
+    link="Enter a link if needed",
+    url="Enter a URL if needed"
+)
+async def multi_command(interaction: discord.Interaction, option: str, link: str = None, url: str = None):
+    """Execute multiple commands with one command."""
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
-                response_data = await response.json()
+            if option == "fluxus" and link:
+                async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
-                # Create an embed object for the API response
-                embed = discord.Embed(title="API Response", color=discord.Color.blue())
+            elif option == "bloxfruits_stock":
+                async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
-                if response.status == 201:
-                    # Assuming the API returns a JSON object with 'key' and 'expire' fields
-                    key = response_data.get('key', 'No key available')
-                    expire = response_data.get('expire', 'No expiration provided')
+            elif option == "addlink" and url:
+                async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
-                    # Convert expiration timestamp if it's a valid integer
-                    if isinstance(expire, int):
-                        try:
-                            # Check if `expire` is in milliseconds (e.g., length > 10)
-                            if expire > 1_000_000_000_000:
-                                expire = expire / 1000  # Convert from milliseconds to seconds
+            elif option == "flux_gen":
+                async with session.get(f"{API_BASE_URL}/flux_gen") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
-                            # Convert to human-readable format
-                            expire = datetime.fromtimestamp(expire).strftime('%Y-%m-%d %H:%M:%S')
-                        except ValueError:
-                            expire = "Invalid expiration timestamp"
+            elif option == "arc_gen":
+                async with session.get(f"{API_BASE_URL}/arc_gen") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
+
+            elif option == "gen_key":
+                async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
+                    response_data = await response.json()
+                    embed = discord.Embed(title="API Response", color=discord.Color.blue())
+
+                    if response.status == 201:
+                        key = response_data.get('key', 'No key available')
+                        expire = response_data.get('expire', 'No expiration provided')
+                        if isinstance(expire, int) and expire > 1_000_000_000_000:
+                            expire = datetime.fromtimestamp(expire / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                        else:
+                            expire = "Invalid expiration format"
+                        embed.add_field(name="Generated Key", value=key, inline=False)
+                        embed.add_field(name="Expiration Time", value=expire, inline=False)
+                        await interaction.response.send_message(embed=embed)
                     else:
-                        expire = "Invalid expiration format"
+                        embed.add_field(name="Error", value=f"Received status code {response.status}", inline=False)
+                        await interaction.response.send_message(embed=embed)
 
-                    embed.add_field(name="Generated Key", value=key, inline=False)
-                    embed.add_field(name="Expiration Time", value=expire, inline=False)
-                else:
-                    # Show the API response even on error status codes
-                    embed.add_field(name="Error", value=f"Received status code {response.status}", inline=False)
-                    embed.add_field(name="Response", value=str(response_data), inline=False)
-                
-                # Send the embed with the API response
-                await interaction.response.send_message(embed=embed, ephemeral=True)
+            elif option == "hydro_gen":
+                async with session.get(f"{API_BASE_URL}/hydro_gen") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
-                # Send a second success message
-                await interaction.followup.send("Command executed successfully!", ephemeral=False)
+            elif option == "boost_ink" and url:
+                async with session.get(f"{API_BASE_URL}/boost.ink?url={url}") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
 
+            elif option == "status":
+                async with session.get(f"{API_BASE_URL}/status") as response:
+                    data = await response.json()
+                    await interaction.response.send_message(data)
+            else:
+                await interaction.response.send_message("Invalid option or missing parameters.", ephemeral=True)
         except Exception as e:
-            # If there's an exception, show the error in an embed
-            embed = discord.Embed(title="Exception Occurred", color=discord.Color.red())
-            embed.add_field(name="Error", value=str(e), inline=False)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-            # Send a second message indicating failure
-            await interaction.followup.send("An error occurred while executing the command.", ephemeral=True)
-            
-@bot.tree.command(name="hydro_gen")
-async def hydro_gen(interaction: discord.Interaction):
-    """Get a random Hydro HWID."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/hydro_gen") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="boost_ink")
-async def boost_ink(interaction: discord.Interaction, url: str):
-    """Extract Base64 from a URL."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/boost.ink?url={url}") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
-
-@bot.tree.command(name="status")
-async def check_status(interaction: discord.Interaction):
-    """Check the health of the API."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/status") as response:
-            data = await response.json()
-            await interaction.response.send_message(data)
+            await interaction.response.send_message(f"An error occurred: {str(e)}", ephemeral=True)
 
 # Start the Flask app in a separate thread
 flask_thread = Thread(target=run_flask)
