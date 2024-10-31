@@ -34,6 +34,41 @@ async def on_ready():
     print("Bot is ready.")
     await bot.tree.sync()  # Sync slash commands with Discord
 
+@bot.tree.command(name="test")
+async def gen_key(interaction: discord.Interaction):
+    """Handle the Generate Key command and create a new file with a generated key in an existing GitHub repository."""
+    github_token = os.getenv('GITHUB_TOKEN')  # Your GitHub token from an environment variable
+    repo_name = "Bhhhhh"  # Your GitHub repository name
+    file_name = f"generated_key_{interaction.user.id}_{int(time.time())}.txt"  # Unique file name
+
+    # Generate a secure random key
+    key = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
+    file_content = f"Generated Key: {key}"  # Content of the file
+
+    # Prepare file content for GitHub API
+    encoded_content = base64.b64encode(file_content.encode()).decode()
+
+    # Create file in GitHub repository
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        payload = {
+            "message": f"Add generated key file: {file_name}",
+            "content": encoded_content,
+            "branch": "main"  # Specify the branch where the file should be created
+        }
+        
+        try:
+            async with session.put(f"https://api.github.com/repos/Hiplitehehe/{repo_name}/contents/{file_name}", json=payload, headers=headers) as response:
+                if response.status == 201:  # HTTP status for created
+                    await interaction.response.send_message("File creation was successful!", ephemeral=False)
+                else:
+                    await interaction.response.send_message("Failed to create file. GitHub API response: " + str(await response.text()), ephemeral=True)
+        except aiohttp.ClientError as e:
+            await interaction.response.send_message(f"Error creating file: {str(e)}", ephemeral=True)
+            
 @bot.tree.command(name="hggg")
 async def gen_key(interaction: discord.Interaction):
     """Handle the Generate Key command and create a new file in an existing GitHub repository."""
