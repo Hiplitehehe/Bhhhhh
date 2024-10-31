@@ -6,6 +6,7 @@ from flask import Flask, jsonify
 from flask import Flask, jsonify
 import threading
 import time
+import base64
 
 # Create a Flask app
 flask_app = Flask(__name__)
