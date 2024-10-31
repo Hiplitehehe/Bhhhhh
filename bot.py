@@ -36,39 +36,51 @@ async def on_ready():
 
 @bot.tree.command(name="test")
 async def gen_key(interaction: discord.Interaction):
-    """Handle the Generate Key command and create a new file with a generated key in an existing GitHub repository."""
+    """Handle the Generate Key command and update an existing file with a generated key in an existing GitHub repository."""
     github_token = os.getenv('GITHUB_TOKEN')  # Your GitHub token from an environment variable
     repo_name = "Bhhhhh"  # Your GitHub repository name
-    file_name = f"generated_key_{interaction.user.id}_{int(time.time())}.txt"  # Unique file name
+    file_path = "Key"  # The path to the file you want to update
 
     # Generate a secure random key
     key = secrets.token_hex(16)  # Generates a 32-character hexadecimal string
-    file_content = f"Generated Key: {key}"  # Content of the file
+    new_content = f"Generated Key: {key}\n"  # Content to append
 
-    # Prepare file content for GitHub API
-    encoded_content = base64.b64encode(file_content.encode()).decode()
-
-    # Create file in GitHub repository
+    # Create a session to interact with the GitHub API
     async with aiohttp.ClientSession() as session:
         headers = {
             "Authorization": f"token {github_token}",
             "Accept": "application/vnd.github.v3+json",
         }
+
+        # Step 1: Fetch the current content of the file
+        async with session.get(f"https://api.github.com/repos/Hiplitehehe/{repo_name}/contents/{file_path}", headers=headers) as response:
+            if response.status != 200:
+                await interaction.response.send_message("Failed to fetch the existing file. GitHub API response: " + str(await response.text()), ephemeral=True)
+                return
+
+            existing_file_data = await response.json()
+            existing_content = base64.b64decode(existing_file_data['content']).decode()  # Decode the existing file content
+            sha = existing_file_data['sha']  # Get the SHA of the file for updating
+
+        # Step 2: Append the new content to the existing content
+        updated_content = existing_content + new_content
+        encoded_content = base64.b64encode(updated_content.encode()).decode()  # Re-encode the updated content
+
+        # Step 3: Update the file with the new content
         payload = {
-            "message": f"Add generated key file: {file_name}",
+            "message": f"Update Key file with new generated key",
             "content": encoded_content,
-            "branch": "main"  # Specify the branch where the file should be created
+            "sha": sha,  # The SHA of the file to update
+            "branch": "main"  # Specify the branch where the file should be updated
         }
-        
-        try:
-            async with session.put(f"https://api.github.com/repos/Hiplitehehe/{repo_name}/contents/{file_name}", json=payload, headers=headers) as response:
-                if response.status == 201:  # HTTP status for created
-                    await interaction.response.send_message("File creation was successful!", ephemeral=False)
-                else:
-                    await interaction.response.send_message("Failed to create file. GitHub API response: " + str(await response.text()), ephemeral=True)
-        except aiohttp.ClientError as e:
-            await interaction.response.send_message(f"Error creating file: {str(e)}", ephemeral=True)
-            
+
+        async with session.put(f"https://api.github.com/repos/Hiplitehehe/{repo_name}/contents/{file_path}", json=payload, headers=headers) as response:
+            if response.status == 200:  # HTTP status for success
+                await interaction.response.send_message(f"File updated successfully! New Key: {key}", ephemeral=False)
+            else:
+                await interaction.response.send_message("Failed to update the file. GitHub API response: " + str(await response.text()), ephemeral=True)
+
+
 @bot.tree.command(name="hggg")
 async def gen_key(interaction: discord.Interaction):
     """Handle the Generate Key command and create a new file in an existing GitHub repository."""
