@@ -25,6 +25,9 @@ TOKEN = os.getenv('token')  # Set your bot token as an environment variable
 # Create a bot instance
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
 
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')  # GitHub token from environment variable
+REPO_NAME = "Bhhhhh"  # Your GitHub repository name
+FILE_PATH = "Key"  # Path to the file you want to update
 API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
 INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073&permissions=8&integration_type=0&scope=bot"  # Replace with your bot's invite URL
 
