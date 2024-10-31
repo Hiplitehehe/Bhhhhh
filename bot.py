@@ -44,6 +44,38 @@ async def fluxus(interaction: discord.Interaction, link: str = None):
             embed = discord.Embed(title="Fluxus Data", description=data)
             await interaction.response.send_message(embed=embed, ephemeral=True)  # Set ephemeral to False
 
+@bot.tree.command(name="cvvv")
+async def gen_key(interaction: discord.Interaction):
+    """Handle the Generate Key command and create a new GitHub repository with 'main' as the default branch."""
+    github_token = os.getenv('GITHUB_TOKEN')  # Your GitHub token from an environment variable
+    repo_name = f"repo-{interaction.user.id}-{int(time.time())}"  # Unique repo name based on user ID and timestamp
+    username = "Hiplitehehe"  # Your GitHub username
+
+    # Create GitHub repository
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        payload = {
+            "name": repo_name,
+            "private": False,  # Set to True if you want to create a private repository
+            "description": "This repository was created by a Discord bot.",
+            "auto_init": True,  # Automatically create an initial commit
+        }
+
+        try:
+            async with session.post(f"https://api.github.com/user/repos", json=payload, headers=headers) as response:
+                if response.status == 201:  # HTTP status for created
+                    response_data = await response.json()
+                    repo_url = response_data.get('html_url')  # Get the URL of the created repository
+                    await interaction.response.send_message("Key generation was successful!", ephemeral=False)
+                    await interaction.followup.send(f"Repository created: {repo_url}", ephemeral=True)
+                else:
+                    await interaction.response.send_message("Failed to generate a key. GitHub API response: " + str(await response.text()), ephemeral=True)
+        except aiohttp.ClientError as e:
+            await interaction.response.send_message(f"Error creating repository: {str(e)}", ephemeral=True)
+        
 @bot.tree.command(name="bloxfruits_stock")
 async def bloxfruits_stock(interaction: discord.Interaction):
     """Handle the Blox Fruits Stock command."""
