@@ -42,7 +42,7 @@ async def on_ready():
     print("Bot is ready.")
     await bot.tree.sync()  # Sync slash commands with Discord
 
-@bot.tree.command(name="admin")
+@bot.tree.command(name="genkey")
 async def gen_key(interaction: discord.Interaction, username: str):
     """Generate a key for a user with a 3-day expiration time."""
 
@@ -260,7 +260,7 @@ async def arc_gen(interaction: discord.Interaction):
             embed = discord.Embed(title="Random Arc HWID", description=data)
             await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
 
-@bot.tree.command(name="gen_key")
+@bot.tree.command(name="delete")
 async def gen_key(interaction: discord.Interaction):
     """Handle the Generate Key command."""
     async with aiohttp.ClientSession() as session:
