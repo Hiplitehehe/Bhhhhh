@@ -42,6 +42,63 @@ async def on_ready():
     print("Bot is ready.")
     await bot.tree.sync()  # Sync slash commands with Discord
 
+@bot.tree.command(name="delta", description="Fetch a bypassed link for the provided URL.")
+async def bypass(interaction: discord.Interaction, url: str):
+    """Sends a URL to the executor bypass API and returns the bypassed link."""
+    api_endpoint = f"http://de01-2.uniplex.xyz:1575/api/executorbypass?url={url}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_endpoint) as response:
+            # Get the response body as text for debugging
+            response_text = await response.text()
+            print(f"API Request URL: {api_endpoint}")  # Print the URL being accessed
+            print(f"API Response (Status Code: {response.status}): {response_text}")  # Print the status code and response text
+
+            # Always send the response text to Discord
+            await interaction.response.send_message(
+                f"API request completed with status code {response.status}. Response: {response_text}",
+                ephemeral=False
+            )
+
+            if response.status == 200:
+                try:
+                    data = await response.json()  # Attempt to parse the response as JSON
+                    bypassed_link = data.get("bypassed_link")  # Adjust based on the actual API response structure
+
+                    if bypassed_link:
+                        await interaction.followup.send(f"Bypassed Link: {bypassed_link}", ephemeral=True)
+                    else:
+                        # If the key doesn't exist, send the entire response for debugging
+                        await interaction.followup.send("Bypassed link not found in response. Full response: " + response_text, ephemeral=True)
+                        print("Bypassed link not found in response:", response_text)
+                except ValueError as e:
+                    await interaction.followup.send("Error processing the response. Response was not valid JSON.", ephemeral=True)
+                    print(f"JSON parsing error: {e}, Response: {response_text}")
+            else:
+                # Send the full response text even if there's an error
+                await interaction.followup.send(
+                    f"API request failed: {response_text}",
+                    ephemeral=True
+                )
+
+@bot.tree.command(name="bypassbeta", description="Fetch a bypassed link for the provided URL.")
+async def bypass(interaction: discord.Interaction, url: str):
+    """Sends a URL to the executor bypass API and returns the bypassed link."""
+    api_endpoint = f"http://de01-2.uniplex.xyz:1575/api/executorbypass?url={url}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_endpoint) as response:
+            # Get the response body as text (not JSON)
+            response_text = await response.text()
+            print(f"API Request URL: {api_endpoint}")  # Print the URL for debugging
+            print(f"API Response (Status Code: {response.status}): {response_text}")  # Print status and full response text
+
+            # Send the API response to the user, including status code and text
+            await interaction.response.send_message(
+                f"API Response (Status: {response.status}): {response_text}",
+                ephemeral=True
+                    )
+            
 @bot.tree.command(name="genkey")
 async def gen_key(interaction: discord.Interaction, username: str):
     """Generate a key for a user with a 3-day expiration time."""
