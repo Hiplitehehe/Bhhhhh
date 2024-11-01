@@ -30,8 +30,70 @@ REPO_NAME = "Bhhhhh"  # Your GitHub repository name
 FILE_PATH = "Key"  # Path to the file you want to update
 API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
 INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073&permissions=8&integration_type=0&scope=bot"  # Replace with your bot's invite URL
+REPO_NAME = "Hiplitehehe/Bhhhhh"  
+FILE_PATH = "Key"  # Path to the file you want to update
+API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
+INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073&permissions=8&integration_type=0&scope=bot"  # Replace with your bot's invite URL
+AUTO_EXPIRATION = 3 * 24 * 60 * 60  
 
 @bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
+    print("Bot is ready.")
+    await bot.tree.sync()  # Sync slash commands with Discord
+
+@bot.tree.command(name="admin")
+async def gen_key(interaction: discord.Interaction, username: str):
+    """Generate a key for a user with a 3-day expiration time."""
+
+    # Generate a secure random key and set it to expire in 3 days
+    generated_key = secrets.token_hex(16)
+    expiration_time = int(time.time()) + AUTO_EXPIRATION
+    new_content = f"{username}:{generated_key}:{expiration_time}\n"
+
+    # Send the first message while the bot works on fetching/updating
+    await interaction.response.send_message("Generating a key for you, please wait...", ephemeral=False)
+
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+
+        async with session.get(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", headers=headers) as response:
+            if response.status != 200:
+                await interaction.followup.send(
+                    f"Failed to fetch the existing file. GitHub API response: {await response.text()}",
+                    ephemeral=True
+                )
+                return
+
+            existing_file_data = await response.json()
+            existing_content = base64.b64decode(existing_file_data['content']).decode()
+            sha = existing_file_data['sha']
+
+        # Append new key info to the existing file content
+        updated_content = existing_content + new_content
+        encoded_content = base64.b64encode(updated_content.encode()).decode()
+
+        payload = {
+            "message": f"Add new key for {username}",
+            "content": encoded_content,
+            "sha": sha,
+            "branch": "main"
+        }
+
+        async with session.put(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", json=payload, headers=headers) as response:
+            if response.status == 200:
+                # Send a second follow-up message with the key and expiration
+                await interaction.followup.send(f"Key for {username}: `{generated_key}` (expires in 3 days)", ephemeral=True)
+            else:
+                await interaction.followup.send(
+                    f"Failed to update the file. GitHub API response: {await response.text()}",
+                    ephemeral=True
+                 )
+                
+
 async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print("Bot is ready.")
