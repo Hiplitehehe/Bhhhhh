@@ -109,7 +109,7 @@ async def gen_key(interaction: discord.Interaction, username: str):
     new_content = f"{username}:{generated_key}:{expiration_time}\n"
 
     # Send the first message while the bot works on fetching/updating
-    await interaction.response.send_message("Generating a key for you, please wait...", ephemeral=False)
+    await interaction.response.send_message("Generating a key for you, is success", ephemeral=False)
 
     async with aiohttp.ClientSession() as session:
         headers = {
