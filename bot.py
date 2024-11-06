@@ -42,73 +42,74 @@ INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073
 AUTO_EXPIRATION = 3 * 24 * 60 * 60  
 welcome_channel = None
 welcome_message = None
+leave_channel = None
+leave_message_template = "We’re sad to see you go, <@{user.id}>! Best of luck!"
 
 @bot.event
 async def on_ready():
-    """This event is triggered when the bot is ready and logged into Discord."""
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print("Bot is ready.")
-    print(f"Bot is connected to {len(bot.guilds)} guild(s).")  # Print the number of guilds
-
-    # Sync commands with Discord (this is important for slash commands to work)
-    await bot.tree.sync()  # Syncs slash commands with Discord
+    await bot.tree.sync()
     print("Slash commands have been synced.")
 
-    # Check if the welcome channel is set and print the status
-    if welcome_channel:
-        print(f"Welcome channel is set to: {welcome_channel.name}")
-    else:
-        print("No welcome channel is set yet.")
+# Command to set the welcome channel
+@bot.tree.command(name="setwelcome", description="Sets the welcome channel for the server.")
+async def set_welcome_channel(interaction: discord.Interaction, channel: discord.TextChannel):
+    global welcome_channel
+    welcome_channel = channel
 
+    # Send a test welcome message
+    embed = discord.Embed(
+        title="Welcome Channel Set!",
+        description="This is a test message. The welcome channel is now set.",
+        color=discord.Color.green()
+    )
+    await channel.send(embed=embed)
+    await interaction.response.send_message(f"Welcome channel has been set to {channel.mention}.", ephemeral=True)
+
+# Event when a new member joins
 @bot.event
 async def on_member_join(member: discord.Member):
-    """Sends a welcome embed to the designated channel when a member joins."""
-    if welcome_channel and welcome_message:
-        # Create an embed for the welcome message
+    if welcome_channel:
         embed = discord.Embed(
             title="Welcome to the Server!",
-            description=welcome_message.format(member=member),  # Use the stored welcome message, formatted with member's mention
-            color=discord.Color.green()  # Customize color here
+            description=f"Welcome {member.mention} to the server! 🎉 We're excited to have you with us and type /genkey and your Roblox user to get key in getkey channel.",
+            color=discord.Color.blue()
         )
-        embed.add_field(name="Get Started", value="Please introduce yourself in the #introductions channel.")
-        embed.add_field(name="Read Rules", value="Don't forget to check out the #rules channel.")
-        
-        # Send the embed message to the welcome channel
         await welcome_channel.send(embed=embed)
+        await welcome_channel.send(f"{member.mention}, feel free to explore and introduce yourself!")
     else:
-        print(f"Welcome channel or message not set. Please set them using the /setwelcome command.")
+        print("Welcome channel not set. Please set the welcome channel using the /setwelcome command.")
 
-# Command to set the welcome channel and mee
-@bot.tree.command(name="setwelcome", description="Sets the welcome channel and message for the server.")
-async def set_welcome_channel(interaction: discord.Interaction, channel: discord.TextChannel, message: str):
-    """Command to set the welcome channel and message."""
+@bot.event
+async def on_member_remove(member: discord.Member):
+    """Send a customized leave message when a user leaves."""
+    if leave_channel and leave_message_template:
+        # Format the message by inserting the member's ID
+        leave_message = leave_message_template.replace("{user_id}", str(member.id))
+        await leave_channel.send(leave_message)
+
+@bot.tree.command(name="setleave", description="Sets the leave message channel and message format.")
+async def set_leave(interaction: discord.Interaction, channel: discord.TextChannel, message: str = None):
+    """Command to set the leave channel and message format."""
+    global leave_channel, leave_message_template
+    leave_channel = channel
     
-    # Check if the user has the "Admin" role or is an admin
-    allowed_role = discord.utils.get(interaction.guild.roles, name="Admin")  # Replace "Admin" with your role name
-    if allowed_role in interaction.user.roles:
-        global welcome_channel, welcome_message
-        welcome_channel = channel
-        welcome_message = message  # Store the welcome message exactly as set by the user
-        await interaction.response.send_message(f"Welcome channel has been set to {channel.mention} and the message has been updated. Testing now...", ephemeral=True)
-        
-        # Send a test welcome message after setting the channel and message
-        embed = discord.Embed(
-            title="Welcome to the Server!",
-            description=welcome_message.format(member=interaction.user),  # Use the exact welcome message
-            color=discord.Color.green()  # Customize color here
-        )
-        embed.add_field(name="Get Started", value="Please introduce yourself in the #introductions channel.")
-        embed.add_field(name="Read Rules", value="Don't forget to check out the #rules channel.")
-        
-        # Send the embed to the welcome channel
-        await welcome_channel.send(embed=embed)
-
-        # Send the second test message (pinging the user)
-        await welcome_channel.send(f"Hey {interaction.user.mention}, we're glad to have you here! 🎉")
-        
+    # If the user provided a custom message, use it; otherwise, use the default message
+    if message:
+        leave_message_template = message
     else:
-        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-
+        leave_message_template = "We're sad to see you go, <@{user_id}>!"  # Use default message if none provided
+    
+    # Immediately test the message by simulating a leave event
+    test_member = interaction.user  # You can use the user who ran the command for testing purposes
+    test_leave_message = leave_message_template.replace("{user_id}", str(test_member.id))
+    await leave_channel.send(test_leave_message)
+    
+    await interaction.response.send_message(
+        f"Leave channel has been set to {channel.mention}.\nLeave message set to:\n{leave_message_template}", ephemeral=True
+    )
+    
 # Command to test the welcome message (no manual message required)
 @bot.tree.command(name="testwelcome", description="Sends a test welcome embed to the set welcome channel.")
 async def test_welcome(interaction: discord.Interaction):
