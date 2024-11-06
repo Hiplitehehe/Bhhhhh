@@ -7,6 +7,7 @@ from flask import Flask, jsonify
 import threading
 import time, secrets
 import base64
+import urllib
 
 # Create a Flask app
 flask_app = Flask(__name__)
@@ -23,7 +24,11 @@ def run_flask():
 TOKEN = os.getenv('token')  # Set your bot token as an environment variable
 
 # Create a bot instance
-bot = commands.Bot(command_prefix='>', intents=discord.Intents.default())
+intents = discord.Intents.default()
+intents.members = True  # Enable member join event
+
+# Initialize the bot with the correct command prefix and intents
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')  # GitHub token from environment variable
 REPO_NAME = "Bhhhhh"  # Your GitHub repository name
@@ -35,12 +40,148 @@ FILE_PATH = "Key"  # Path to the file you want to update
 API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API domain
 INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1289846587333546073&permissions=8&integration_type=0&scope=bot"  # Replace with your bot's invite URL
 AUTO_EXPIRATION = 3 * 24 * 60 * 60  
+welcome_channel = None
+welcome_message = None
 
 @bot.event
 async def on_ready():
+    """This event is triggered when the bot is ready and logged into Discord."""
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
     print("Bot is ready.")
-    await bot.tree.sync()  # Sync slash commands with Discord
+    print(f"Bot is connected to {len(bot.guilds)} guild(s).")  # Print the number of guilds
+
+    # Sync commands with Discord (this is important for slash commands to work)
+    await bot.tree.sync()  # Syncs slash commands with Discord
+    print("Slash commands have been synced.")
+
+    # Check if the welcome channel is set and print the status
+    if welcome_channel:
+        print(f"Welcome channel is set to: {welcome_channel.name}")
+    else:
+        print("No welcome channel is set yet.")
+
+@bot.event
+async def on_member_join(member: discord.Member):
+    """Sends a welcome embed to the designated channel when a member joins."""
+    if welcome_channel and welcome_message:
+        # Create an embed for the welcome message
+        embed = discord.Embed(
+            title="Welcome to the Server!",
+            description=welcome_message.format(member=member),  # Use the stored welcome message, formatted with member's mention
+            color=discord.Color.green()  # Customize color here
+        )
+        embed.add_field(name="Get Started", value="Please introduce yourself in the #introductions channel.")
+        embed.add_field(name="Read Rules", value="Don't forget to check out the #rules channel.")
+        
+        # Send the embed message to the welcome channel
+        await welcome_channel.send(embed=embed)
+    else:
+        print(f"Welcome channel or message not set. Please set them using the /setwelcome command.")
+
+# Command to set the welcome channel and mee
+@bot.tree.command(name="setwelcome", description="Sets the welcome channel and message for the server.")
+async def set_welcome_channel(interaction: discord.Interaction, channel: discord.TextChannel, message: str):
+    """Command to set the welcome channel and message."""
+    
+    # Check if the user has the "Admin" role or is an admin
+    allowed_role = discord.utils.get(interaction.guild.roles, name="Admin")  # Replace "Admin" with your role name
+    if allowed_role in interaction.user.roles:
+        global welcome_channel, welcome_message
+        welcome_channel = channel
+        welcome_message = message  # Store the welcome message exactly as set by the user
+        await interaction.response.send_message(f"Welcome channel has been set to {channel.mention} and the message has been updated. Testing now...", ephemeral=True)
+        
+        # Send a test welcome message after setting the channel and message
+        embed = discord.Embed(
+            title="Welcome to the Server!",
+            description=welcome_message.format(member=interaction.user),  # Use the exact welcome message
+            color=discord.Color.green()  # Customize color here
+        )
+        embed.add_field(name="Get Started", value="Please introduce yourself in the #introductions channel.")
+        embed.add_field(name="Read Rules", value="Don't forget to check out the #rules channel.")
+        
+        # Send the embed to the welcome channel
+        await welcome_channel.send(embed=embed)
+
+        # Send the second test message (pinging the user)
+        await welcome_channel.send(f"Hey {interaction.user.mention}, we're glad to have you here! 🎉")
+        
+    else:
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+
+# Command to test the welcome message (no manual message required)
+@bot.tree.command(name="testwelcome", description="Sends a test welcome embed to the set welcome channel.")
+async def test_welcome(interaction: discord.Interaction):
+    """Command to send a test welcome embed to the welcome channel."""
+    if welcome_channel and welcome_message:
+        # Create an embed for the welcome message (auto-use the welcome message set)
+        embed = discord.Embed(
+            title="Welcome to the Server!",
+            description=f"Welcome {interaction.user.mention} to the server! 🎉 We're excited to have you with us.",
+            color=discord.Color.green()  # Customize color here
+        )
+        embed.add_field(name="Get Started", value="Please introduce yourself in the #introductions channel.")
+        embed.add_field(name="Read Rules", value="Don't forget to check out the #rules channel.")
+        
+        # Send the embed to the welcome channel
+        await welcome_channel.send(embed=embed)
+        await interaction.response.send_message("Test welcome embed sent to the welcome channel.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Welcome channel or message not set. Please set them using the /setwelcome command.", ephemeral=True)
+
+@bot.tree.command(name="say", description="Bot repeats the message you provide twice in embeds.")
+async def say(interaction: discord.Interaction, message: str):
+    """Makes the bot say a message in the channel twice as embeds without replying."""
+
+    # Create the embed for the message
+    embed = discord.Embed(title="", description=message, color=discord.Color.blue())
+
+    # Send the first embed
+    await interaction.response.defer()  # Prevents initial reply-style message
+    await interaction.followup.send(embed=embed)
+
+    # Send the second embed
+    await interaction.followup.send(embed=embed)
+
+@bot.tree.command(name="lock", description="Locks a channel to make it read-only.")
+@commands.has_permissions(administrator=True)  # Ensure only admins can use this command
+async def lock_channel(interaction: discord.Interaction, channel: discord.TextChannel = None):
+    """Locks the specified channel, making it read-only for regular members."""
+    
+    channel = channel or interaction.channel  # Use the specified channel or the one where the command was used
+    
+    # Attempt to update permissions to make the channel read-only for @everyone
+    overwrite = channel.overwrites_for(interaction.guild.default_role)
+    overwrite.send_messages = False  # Prevents everyone from sending messages in the channel
+
+    await channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+    await interaction.response.send_message(f"{channel.mention} has been locked and is now read-only.", ephemeral=True)
+
+@lock_channel.error
+async def lock_channel_error(interaction: discord.Interaction, error):
+    # Error handling if the user doesn't have permission
+    if isinstance(error, commands.MissingPermissions):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+    else:
+        await interaction.response.send_message("An error occurred while locking the channel.", ephemeral=True)
+
+@bot.tree.command(name="search", description="Search for a term using the ScriptBlox API.")
+async def search(interaction: discord.Interaction, search_input: str, mode_select: str, page: int = 1):
+    """Fetches search results from the ScriptBlox API with pagination support."""
+    
+    # Construct the API URL
+    api_url = f"https://scriptblox-api-proxy.vercel.app/api/search?q={urllib.parse.quote(search_input)}&mode={urllib.parse.quote(mode_select)}&page={page}"
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status == 200:
+                data = await response.json()  # Parse the JSON response
+                # You can format the response here as needed
+                await interaction.response.send_message(f"Results for '{search_input}' in mode '{mode_select}', page {page}:\n{data}", ephemeral=True)
+            else:
+                # Send the error message received from the API
+                error_message = await response.text()  # Get the text of the error response
+                await interaction.response.send_message(f"Error: {error_message}", ephemeral=True)
 
 @bot.tree.command(name="delta", description="Fetch a bypassed link for the provided URL.")
 async def bypass(interaction: discord.Interaction, url: str):
@@ -52,7 +193,7 @@ async def bypass(interaction: discord.Interaction, url: str):
             # Get the response body as text for debugging
             response_text = await response.text()
             print(f"API Request URL: {api_endpoint}")  # Print the URL being accessed
-            print(f"API Response (Status Code: {response.status}): {response_text}")  # Print the status code and response text
+            print(f"API Response if not work ask axera to decode delta lootlabs (Status Code: {response.status}): {response_text}")  # Print the status code and response text
 
             # Always send the response text to Discord
             await interaction.response.send_message(
@@ -241,120 +382,4 @@ async def gen_key(interaction: discord.Interaction):
 async def fluxus(interaction: discord.Interaction, link: str = None):
     """Handle the Fluxus command with an optional link."""
     async with aiohttp.ClientSession() as session:
-        # Use the provided link or mention the user if no link is given
-        if link is None:
-            link = interaction.user.mention
-        async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
-            data = await response.json()
-            embed = discord.Embed(title="Fluxus Data", description=data)
-            await interaction.response.send_message(embed=embed, ephemeral=True)  # Set ephemeral to False
-
-@bot.tree.command(name="cvvv")
-async def gen_key(interaction: discord.Interaction):
-    """Handle the Generate Key command and create a new GitHub repository with 'main' as the default branch."""
-    github_token = os.getenv('GITHUB_TOKEN')  # Your GitHub token from an environment variable
-    repo_name = f"repo-{interaction.user.id}-{int(time.time())}"  # Unique repo name based on user ID and timestamp
-    username = "Hiplitehehe"  # Your GitHub username
-
-    # Create GitHub repository
-    async with aiohttp.ClientSession() as session:
-        headers = {
-            "Authorization": f"token {github_token}",
-            "Accept": "application/vnd.github.v3+json",
-        }
-        payload = {
-            "name": repo_name,
-            "private": False,  # Set to True if you want to create a private repository
-            "description": "This repository was created by a Discord bot.",
-            "auto_init": True,  # Automatically create an initial commit
-        }
-
-        try:
-            async with session.post(f"https://api.github.com/user/repos", json=payload, headers=headers) as response:
-                if response.status == 201:  # HTTP status for created
-                    response_data = await response.json()
-                    repo_url = response_data.get('html_url')  # Get the URL of the created repository
-                    await interaction.response.send_message("Key generation was successful!", ephemeral=False)
-                    await interaction.followup.send(f"Repository created: {repo_url}", ephemeral=True)
-                else:
-                    await interaction.response.send_message("Failed to generate a key. GitHub API response: " + str(await response.text()), ephemeral=True)
-        except aiohttp.ClientError as e:
-            await interaction.response.send_message(f"Error creating repository: {str(e)}", ephemeral=True)
-        
-@bot.tree.command(name="bloxfruits_stock")
-async def bloxfruits_stock(interaction: discord.Interaction):
-    """Handle the Blox Fruits Stock command."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
-            data = await response.json()
-            embed = discord.Embed(title="Blox Fruits Stock", description=data)
-            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
-
-@bot.tree.command(name="addlink")
-async def addlink(interaction: discord.Interaction, url: str):
-    """Handle the Add Link command."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
-            data = await response.json()
-            embed = discord.Embed(title="Add Link", description=data)
-            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
-
-@bot.tree.command(name="flux_gen")
-async def flux_gen(interaction: discord.Interaction):
-    """Handle the Flux Gen command."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/flux_gen") as response:
-            data = await response.json()
-            embed = discord.Embed(title="Random Flux HWID", description=data)
-            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
-
-@bot.tree.command(name="arc_gen")
-async def arc_gen(interaction: discord.Interaction):
-    """Handle the Arc Gen command."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_BASE_URL}/arc_gen") as response:
-            data = await response.json()
-            embed = discord.Embed(title="Random Arc HWID", description=data)
-            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
-
-@bot.tree.command(name="delete")
-async def gen_key(interaction: discord.Interaction):
-    """Handle the Generate Key command."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
-            response_data = await response.json()
-            
-            if response.status == 201:
-                key = response_data.get('key')
-                await interaction.response.send_message("Key generation was successful!", ephemeral=False)  # First message
-                await interaction.followup.send(f"Generated Key: {key}", ephemeral=True)  # Second message
-            else:
-                await interaction.response.send_message("Failed to generate a key.", ephemeral=False)  # Single failure message
-
-@bot.tree.command(name="status")
-async def status_command(interaction: discord.Interaction):
-    """Handle the Status command."""
-    embed = discord.Embed(title="Bot Status", description="The bot is online and running!")
-    await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
-
-@bot.tree.command(name="commands")
-async def commands_list(interaction: discord.Interaction):
-    """Send a message with a list of available commands."""
-    command_list = """
-    **Available Commands:**
-    /fluxus - Handle the Fluxus command (optional link)
-    /bloxfruits_stock - Handle the Blox Fruits Stock command
-    /addlink <url> - Handle the Add Link command
-    /flux_gen - Handle the Flux Gen command
-    /arc_gen - Handle the Arc Gen command
-    /gen_key - Handle the Generate Key command
-    /status - Get the bot's status
-    """
-    await interaction.response.send_message(command_list, ephemeral=False)  # Set ephemeral to False
-
-flask_thread = threading.Thread(target=run_flask)
-flask_thread.start()
-
-
-# Run the bot
-bot.run(TOKEN)
+     
