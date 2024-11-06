@@ -382,4 +382,148 @@ async def gen_key(interaction: discord.Interaction):
 async def fluxus(interaction: discord.Interaction, link: str = None):
     """Handle the Fluxus command with an optional link."""
     async with aiohttp.ClientSession() as session:
-     
+        # Use the provided link or mention the user if no link is given
+        if link is None:
+            link = interaction.user.mention
+        async with session.get(f"{API_BASE_URL}/api/fluxus?link={link}") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Fluxus Data", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=True)  # Set ephemeral to False
+
+@bot.tree.command(name="cvvv")
+async def gen_key(interaction: discord.Interaction):
+    """Handle the Generate Key command and create a new GitHub repository with 'main' as the default branch."""
+    github_token = os.getenv('GITHUB_TOKEN')  # Your GitHub token from an environment variable
+    repo_name = f"repo-{interaction.user.id}-{int(time.time())}"  # Unique repo name based on user ID and timestamp
+    username = "Hiplitehehe"  # Your GitHub username
+
+    # Create GitHub repository
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"token {github_token}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+        payload = {
+            "name": repo_name,
+            "private": False,  # Set to True if you want to create a private repository
+            "description": "This repository was created by a Discord bot.",
+            "auto_init": True,  # Automatically create an initial commit
+        }
+
+        try:
+            async with session.post(f"https://api.github.com/user/repos", json=payload, headers=headers) as response:
+                if response.status == 201:  # HTTP status for created
+                    response_data = await response.json()
+                    repo_url = response_data.get('html_url')  # Get the URL of the created repository
+                    await interaction.response.send_message("Key generation was successful!", ephemeral=False)
+                    await interaction.followup.send(f"Repository created: {repo_url}", ephemeral=True)
+                else:
+                    await interaction.response.send_message("Failed to generate a key. GitHub API response: " + str(await response.text()), ephemeral=True)
+        except aiohttp.ClientError as e:
+            await interaction.response.send_message(f"Error creating repository: {str(e)}", ephemeral=True)
+        
+@bot.tree.command(name="bloxfruits_stock")
+async def bloxfruits_stock(interaction: discord.Interaction):
+    """Handle the Blox Fruits Stock command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/api/bloxfruits/stock") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Blox Fruits Stock", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
+
+@bot.tree.command(name="addlink")
+async def addlink(interaction: discord.Interaction, url: str):
+    """Handle the Add Link command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/TestHub/addlink?url={url}") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Add Link", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
+
+@bot.tree.command(name="flux_gen")
+async def flux_gen(interaction: discord.Interaction):
+    """Handle the Flux Gen command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/flux_gen") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Random Flux HWID", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
+
+@bot.tree.command(name="arc_gen")
+async def arc_gen(interaction: discord.Interaction):
+    """Handle the Arc Gen command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(f"{API_BASE_URL}/arc_gen") as response:
+            data = await response.json()
+            embed = discord.Embed(title="Random Arc HWID", description=data)
+            await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
+
+@bot.tree.command(name="delete")
+async def gen_key(interaction: discord.Interaction):
+    """Handle the Generate Key command."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://code-o4xxbr303-hiplitehehes-projects.vercel.app/api/add") as response:
+            response_data = await response.json()
+            
+            if response.status == 201:
+                key = response_data.get('key')
+                await interaction.response.send_message("Key generation was successful!", ephemeral=False)  # First message
+                await interaction.followup.send(f"Generated Key: {key}", ephemeral=True)  # Second message
+            else:
+                await interaction.response.send_message("Failed to generate a key.", ephemeral=False)  # Single failure message
+
+@bot.tree.command(name="search_api")
+async def search_api(interaction: discord.Interaction, search_input: str, mode_select: str):
+    """Search the given input with the API and return the results."""
+    api_url = f"https://scriptblox-api-proxy.vercel.app/api/search?q={search_input}&mode={mode_select}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status == 200:
+                data = await response.json()
+                # Assuming the response contains a 'results' field for this example
+                results = data.get('results', [])
+                if results:
+                    formatted_results = "\n".join([f"- {item}" for item in results[:5]])  # Show top 5 results
+                    embed = discord.Embed(
+                        title="Search Results",
+                        description=formatted_results,
+                        color=discord.Color.blue()
+                    )
+                    await interaction.response.send_message(embed=embed)
+                else:
+                    await interaction.response.send_message("No results found.", ephemeral=True)
+            else:
+                error_text = await response.text()
+                await interaction.response.send_message(
+                    f"API request failed with status code {response.status}.\nDetails: {error_text}",
+                    ephemeral=True
+                )
+
+@bot.tree.command(name="status")
+async def status_command(interaction: discord.Interaction):
+    """Handle the Status command."""
+    embed = discord.Embed(title="Bot Status", description="The bot is online and running!")
+    await interaction.response.send_message(embed=embed, ephemeral=False)  # Set ephemeral to False
+
+@bot.tree.command(name="commands")
+async def commands_list(interaction: discord.Interaction):
+    """Send a message with a list of available commands."""
+    command_list = """
+    **Available Commands:**
+    /fluxus - Handle the Fluxus command (optional link)
+    /bloxfruits_stock - Handle the Blox Fruits Stock command
+    /addlink <url> - Handle the Add Link command
+    /flux_gen - Handle the Flux Gen command
+    /arc_gen - Handle the Arc Gen command
+    /gen_key - Handle the Generate Key command
+    /status - Get the bot's status
+    """
+    await interaction.response.send_message(command_list, ephemeral=False)  # Set ephemeral to False
+
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.start()
+
+
+# Run the bot
+bot.run('TOKEN')
