@@ -526,4 +526,4 @@ flask_thread.start()
 
 
 # Run the bot
-bot.run('TOKEN')
+bot.run(TOKEN)
