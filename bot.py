@@ -242,55 +242,12 @@ async def bypass(interaction: discord.Interaction, url: str):
                     )
             
 @bot.tree.command(name="genkey")
-async def gen_key(interaction: discord.Interaction, username: str):
-    """Generate a key for a user with a 3-day expiration time."""
+async def jdjd_command(interaction: discord.Interaction):
+    """Responds with 'key ' when the /genkey command is invoked."""
+    # Send the response to the channel
+    await interaction.response.send_message("Key is B3f9xT2W8kZ1uL7jP6yV")
+    print("Responded with 'ejjeje' for /jdjd command.")
 
-    # Generate a secure random key and set it to expire in 3 days
-    generated_key = secrets.token_hex(16)
-    expiration_time = int(time.time()) + AUTO_EXPIRATION
-    new_content = f"{username}:{generated_key}:{expiration_time}\n"
-
-    # Send the first message while the bot works on fetching/updating
-    await interaction.response.send_message("Generating a key for you, is success", ephemeral=False)
-
-    async with aiohttp.ClientSession() as session:
-        headers = {
-            "Authorization": f"token {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github.v3+json",
-        }
-
-        async with session.get(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", headers=headers) as response:
-            if response.status != 200:
-                await interaction.followup.send(
-                    f"Failed to fetch the existing file. GitHub API response: {await response.text()}",
-                    ephemeral=True
-                )
-                return
-
-            existing_file_data = await response.json()
-            existing_content = base64.b64decode(existing_file_data['content']).decode()
-            sha = existing_file_data['sha']
-
-        # Append new key info to the existing file content
-        updated_content = existing_content + new_content
-        encoded_content = base64.b64encode(updated_content.encode()).decode()
-
-        payload = {
-            "message": f"Add new key for {username}",
-            "content": encoded_content,
-            "sha": sha,
-            "branch": "main"
-        }
-
-        async with session.put(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", json=payload, headers=headers) as response:
-            if response.status == 200:
-                # Send a second follow-up message with the key and expiration
-                await interaction.followup.send(f"Key for {username}: `{generated_key}` (expires in 3 days)", ephemeral=True)
-            else:
-                await interaction.followup.send(
-                    f"Failed to update the file. GitHub API response: {await response.text()}",
-                    ephemeral=True
-                 )
                 
 
 async def on_ready():
