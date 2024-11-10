@@ -8,6 +8,11 @@ import threading
 import time, secrets
 import base64
 import urllib
+import requests
+import json
+from discord import ButtonStyle, ui
+import asyncio
+from discord import app_commands
 
 # Create a Flask app
 flask_app = Flask(__name__)
@@ -44,13 +49,307 @@ welcome_channel = None
 welcome_message = None
 leave_channel = None
 leave_message_template = "We’re sad to see you go, <@{user.id}>! Best of luck!"
+keywords = ["hello", "key", "detected"]  # Add more keywords as needed
+trigger_word = "hello"  # The word that triggers the response
+auto_response_text = "Hello! How can I assist you today?"
+JOURNEY_API_URL = "https://api.zukijourney.com/v1/chat/completions"
+JOURNEY_API_KEY = ""
+# Specific channel ID where the response should trigger
+auto_response_channel_id = 1284874380194611200  # Replace with your specific channel ID
+RANDOM_W = ""
+discord_webhook_url = "https://discord.com/api/webhooks/1304997756687093811/TeWIS5VyfXXGiHleog5xCzsZrBXskkVBlCSzQkdNjmcW2s2ieFXvB9nURKEhNx5WupEC"
+platoboost_url = "https://gateway.platoboost.com/a/8?id="
+bypass_url = "https://bhhhhh-1-sebx.onrender.com"
+
+# Command to trigger the bypass with HWID
+
+def time_convert(minutes):
+    hours = minutes // 60
+    mins = minutes % 60
+    return f"{hours} Hours {mins} Minutes"
+
+async def send_discord_webhook(link, channel):
+    embed = discord.Embed(
+        title="Security Check Detected!",
+        description=f"**Please solve the Captcha**: [Open]({link})",
+        color=0x5783719
+    )
+    await channel.send(embed=embed)
+
+async def get_turnstile_response():
+    await asyncio.sleep(1)  # Simulated delay for response
+    return "simulated-captcha-response"
+
+async def delta(id, channel):
+    try:
+        response = requests.get(f"https://api-gateway.platoboost.com/v1/authenticators/8/{id}")
+        if response.status_code != 200:
+            raise Exception(f"Access to Platoboost failed: {response.status_code}")
+
+        already_pass = response.json()
+        if 'key' in already_pass:
+            time_left = time_convert(already_pass['minutesLeft'])
+            await channel.send(f"**INFO** Remaining time: {time_left} - KEY: {already_pass['key']}")
+            return
+
+        captcha = already_pass.get('captcha')
+        post_data = {
+            "captcha": await get_turnstile_response() if captcha else "",
+            "type": "Turnstile" if captcha else ""
+        }
+        response = requests.post(
+            f"https://api-gateway.platoboost.com/v1/sessions/auth/8/{id}",
+            json=post_data
+        )
+
+        if response.status_code != 200:
+            security_check_link = f"{platoboost_url}{id}"
+            await send_discord_webhook(security_check_link, channel)
+            raise Exception("Security Check: Notified on Discord!")
+
+        loot_link = response.json()['redirect']
+        await asyncio.sleep(1)  # Simulated delay
+
+        r = requests.utils.urlparse(loot_link).query.split("r=")[-1]
+        decoded = requests.utils.unquote(r).encode('ascii')
+        tk = requests.utils.parse_qs(decoded)['tk'][0]
+        await asyncio.sleep(5)  # Simulated delay
+
+        response = requests.put(f"https://api-gateway.platoboost.com/v1/sessions/auth/8/{id}/{tk}")
+        if response.status_code != 200:
+            raise Exception(f"Key creation failed: {response.status_code}")
+
+        response = requests.get(f"https://api-gateway.platoboost.com/v1/authenticators/8/{id}")
+        pass_data = response.json()
+        if 'key' in pass_data:
+            time_left = time_convert(pass_data['minutesLeft'])
+            await channel.send(f"**INFO** Remaining time: {time_left} - KEY: {pass_data['key']}")
+    except Exception as e:
+        await channel.send(f"**ERROR**: {e}")
+
+# This command will be the parent command
+@bot.tree.command(name="bypass", description="Start the bypassing process using a specific HWID")
+@app_commands.describe(hwid="The HWID to bypass.")
+async def bypass_command(interaction: discord.Interaction, hwid: str):
+    await interaction.response.send_message(f"Starting bypass for HWID: {hwid}")
+    await delta(hwid, interaction.channel)
+
+# Subcommand to start HWID bypass
+
+# Define the hangman stagesjjjj
+
+
+# Define the hangman stages (visual representation of wrong attempts)
+HANGMAN_STAGES = [
+    "```\n  -----\n  |   |\n      |\n      |\n      |\n      |\n  -----\n```",  # 0 incorrect guesses
+    "```\n  -----\n  |   |\n  O   |\n      |\n      |\n      |\n  -----\n```",  # 1 incorrect guess
+    "```\n  -----\n  |   |\n  O   |\n  |   |\n      |\n      |\n  -----\n```",  # 2 incorrect guesses
+    "```\n  -----\n  |   |\n  O   |\n /|   |\n      |\n      |\n  -----\n```",  # 3 incorrect guesses
+    "```\n  -----\n  |   |\n  O   |\n /|\\  |\n      |\n      |\n  -----\n```",  # 4 incorrect guesses
+    "```\n  -----\n  |   |\n  O   |\n /|\\  |\n /    |\n      |\n  -----\n```",  # 5 incorrect guesses
+    "```\n  -----\n  |   |\n  O   |\n /|\\  |\n / \\  |\n      |\n  -----\n```"   # 6 incorrect guesses (game over)
+]
+
+# Fetch a random word from the API
+def fetch_random_word():
+    url = "https://random-word-api.herokuapp.com/word?number=1"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()[0].upper()  # Convert word to uppercase
+    return "HANGMAN"  # Default word if API fails
+
+# Set up the bot
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Initialize the game variables
+guessed_letters = set()
+incorrect_guesses = 0
+HANGMAN_WORD = fetch_random_word()
+MAX_INCORRECT_GUESSES = len(HANGMAN_STAGES) - 1
+
+def display_word():
+    """Display the word with unguessed letters as underscores."""
+    return ' '.join([letter if letter in guessed_letters else '_' for letter in HANGMAN_WORD])
+
+# Create alphabet buttons (A-Z)
+def create_alphabet_buttons(page=0):
+    buttons = []
+    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    
+    # Split alphabet into two parts, A-M and N-Z, and show buttons for the selected page
+    start = page * 13
+    end = start + 13
+    for letter in alphabet[start:end]:
+        button = discord.ui.Button(label=letter, custom_id=letter)
+        buttons.append(button)
+    
+    return buttons
+
+# Next and Previous buttons to navigate pages
+class AlphabetPaginationView(discord.ui.View):
+    def __init__(self, page=0):
+        super().__init__(timeout=60.0)
+        self.page = page
+        self.update_buttons()
+
+    def update_buttons(self):
+        # Remove old buttons
+        for button in self.children:
+            self.remove_item(button)
+
+        # Add new alphabet buttons for the current page
+        buttons = create_alphabet_buttons(self.page)
+        for button in buttons:
+            self.add_item(button)
+
+        # Add previous and next page navigation buttons
+        if self.page > 0:
+            self.add_item(discord.ui.Button(label="Previous", custom_id="previous"))
+        self.add_item(discord.ui.Button(label="Next", custom_id="next"))
+
+    async def on_button_click(self, interaction: discord.Interaction):
+        if interaction.custom_id == "next":
+            self.page += 1
+        elif interaction.custom_id == "previous":
+            self.page -= 1
+
+        self.update_buttons()
+        await interaction.response.edit_message(view=self)
+
+# Create a function to start a new hangman game
+@bot.tree.command(name="hangman", description="Play hangman with a random word!")
+async def hangman(interaction: discord.Interaction):
+    global guessed_letters, incorrect_guesses, HANGMAN_WORD
+    guessed_letters = set()
+    incorrect_guesses = 0
+    HANGMAN_WORD = fetch_random_word()  # Fetch a new word each time the game is started
+
+    embed = discord.Embed(title="Hangman Game", description="Start guessing letters!")
+    embed.add_field(name="Word", value=display_word(), inline=False)
+    embed.add_field(name="Attempts Left", value=HANGMAN_STAGES[incorrect_guesses], inline=False)
+
+    # Create a view for alphabet buttons with pagination
+    view = AlphabetPaginationView()
+
+    # Send the initial embed with the alphabet buttons
+    await interaction.response.send_message(embed=embed, view=view)
+
+    # Handle button interaction for guessing letters
+    def check(interaction: discord.Interaction):
+        return interaction.user == interaction.user and interaction.custom_id in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+    while incorrect_guesses < MAX_INCORRECT_GUESSES:
+        try:
+            # Wait for button click
+            interaction = await bot.wait_for("interaction", check=check, timeout=60.0)
+            guess = interaction.custom_id.lower()
+
+            # If letter has already been guessed
+            if guess in guessed_letters:
+                await interaction.response.send_message(f"You've already guessed '{guess}'. Try again!")
+                continue
+
+            guessed_letters.add(guess)
+
+            if guess in HANGMAN_WORD.lower():
+                await interaction.response.send_message(f"Good guess! '{guess}' is in the word.")
+            else:
+                incorrect_guesses += 1
+                await interaction.response.send_message(f"Incorrect guess! '{guess}' is not in the word.")
+
+            # Update the embed with the current state of the game
+            embed = discord.Embed(title="Hangman Game", description="Start guessing letters!")
+            embed.add_field(name="Word", value=display_word(), inline=False)
+            embed.add_field(name="Attempts Left", value=HANGMAN_STAGES[incorrect_guesses], inline=False)
+            await interaction.edit_original_response(embed=embed)
+
+            # Check for win condition
+            if all(letter in guessed_letters for letter in HANGMAN_WORD.lower()):
+                await interaction.response.send_message(f"Congratulations! You've guessed the word: {HANGMAN_WORD} 🎉")
+                break
+
+        except asyncio.TimeoutError:
+            await interaction.response.send_message("Time's up! The word was: " + HANGMAN_WORD)
+            break
+
+    # If the user used up all attempts
+    if incorrect_guesses >= MAX_INCORRECT_GUESSES:
+        await interaction.response.send_message(f"Game over! You've run out of attempts. The word was: {HANGMAN_WORD}")
+
+    # Add logic for guessing letters, updating the embed as needed, etc.
+
+# Define a function to send requests to the Journey API
+def get_ai_response(user_message):
+    headers = {
+        'Authorization': f'Bearer {JOURNEY_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    data = {
+        "model": "caramelldansen-1",  # Replace with the model you want to use
+        "messages": [
+            {"role": "user", "content": user_message}
+        ]
+    }
+
+    # Send the POST request to the Journey API
+    response = requests.post(JOURNEY_API_URL, headers=headers, data=json.dumps(data))
+
+    if response.status_code == 200:
+        response_data = response.json()
+        return response_data['choices'][0]['message']['content']
+    else:
+        return f"Error: {response.status_code} - {response.text}"
+
+# Define the /ask command
+@bot.tree.command(name="ask", description="Ask the AI a question!")
+async def ask_command(interaction: discord.Interaction, question: str):
+    await interaction.response.defer()  # Acknowledge the command
+    ai_response = get_ai_response(question)  # Get the AI response from the Journey API
+    await interaction.followup.send(ai_response)  # Send the response back to Discord
 
 @bot.event
+async def on_message(message):
+    # Ensure the message is from a different user (not the bot itself)
+    if message.author != bot.user:
+        # Check if the message is in the correct channel and contains the trigger word
+        if message.channel.id == auto_response_channel_id and trigger_word in message.content.lower():
+            await message.channel.send(auto_response_text)
+    
+    # Process commands normally after handling messages
+    await bot.process_commands(message)
+
+@bot.command(name="test_autorespond")
+async def test_autorespond(ctx):
+    # Let the user know the bot is working
+    await ctx.send(f"Auto-response is set to trigger when '{trigger_word}' is detected in the channel.")
+
+# Event listener to check messages and respo
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+
+    keywords = ["hello", "key", "detected"]
+
+    for keyword in keywords:
+        if keyword.lower() in message.content.lower():
+            await message.channel.send(f"Keyword '{keyword}' detected!")
+            break
+    # Ensure that commands still work if the bot needs to process any commands
+    await bot.process_commands(message)
+
+# Ensure the bot is ready and syncs slash commands if used
+@bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
+    await bot.tree.sync()  # Sync slash commands if you're using them
+    print(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
     print("Bot is ready.")
-    await bot.tree.sync()
-    print("Slash commands have been synced.")
+
+    # Print the success message and synced command names
+    for command in bot.tree.get_commands():
+        print(f"Command '{command.name}' has been successfully synced!")
 
 # Command to set the welcome channel
 @bot.tree.command(name="setwelcome", description="Sets the welcome channel for the server.")
@@ -58,7 +357,7 @@ async def set_welcome_channel(interaction: discord.Interaction, channel: discord
     global welcome_channel
     welcome_channel = channel
 
-    # Send a test welcome message
+    # Send a test welcome message once during the setup of the channel
     embed = discord.Embed(
         title="Welcome Channel Set!",
         description="This is a test message. The welcome channel is now set.",
@@ -76,8 +375,8 @@ async def on_member_join(member: discord.Member):
             description=f"Welcome {member.mention} to the server! 🎉 We're excited to have you with us and type /genkey and your Roblox user to get key in getkey channel.",
             color=discord.Color.blue()
         )
+        # Send the welcome embed message only once here
         await welcome_channel.send(embed=embed)
-        await welcome_channel.send(f"{member.mention}, feel free to explore and introduce yourself!")
     else:
         print("Welcome channel not set. Please set the welcome channel using the /setwelcome command.")
 
@@ -90,9 +389,16 @@ async def on_member_remove(member: discord.Member):
         await leave_channel.send(leave_message)
 
 @bot.tree.command(name="setleave", description="Sets the leave message channel and message format.")
-async def set_leave(interaction: discord.Interaction, channel: discord.TextChannel, message: str = None):
+async def set_leave(interaction: discord.Interaction, channel: discord.TextChannel = None, message: str = None):
     """Command to set the leave channel and message format."""
     global leave_channel, leave_message_template
+    
+    # If no channel is provided, use a default channel (you can set this to any channel ID you prefer)
+    if not channel:
+        channel = interaction.guild.system_channel  # Default to the system channel (if it exists)
+        if not channel:
+            return await interaction.response.send_message("No valid channel found to set the leave message.", ephemeral=True)
+    
     leave_channel = channel
     
     # If the user provided a custom message, use it; otherwise, use the default message
@@ -223,6 +529,35 @@ async def bypass(interaction: discord.Interaction, url: str):
                     ephemeral=True
                 )
 
+@bot.tree.command(name="bypass", description="Start bypass with a given HWID")
+async def bypass_command(interaction: discord.Interaction, hwid: str):
+    """Command to bypass using the provided HWID."""
+    
+    # Prepare the data payload
+    data = {
+        "hwid": hwid
+    }
+
+    try:
+        # Send POST request to the bypass API
+        response = requests.post(bypass_url, json=data)
+
+        # Always attempt to extract JSON response, even in case of failure
+        if response.status_code == 200:
+            api_response = response.json()  # Parse the JSON response
+            message = f"Bypass successful! API Response: {api_response}"
+        else:
+            api_response = response.json()  # Parse the error JSON response
+            message = f"Failed to initiate bypass. API Response: {api_response}"
+
+    except Exception as e:
+        # In case of any exceptions (e.g., network errors)
+        api_response = {"error": str(e)}
+        message = f"An error occurred while trying to bypass. API Response: {api_response}"
+
+    # Send the message with the API response, regardless of success or failure
+    await interaction.response.send_message(message)
+
 @bot.tree.command(name="bypassbeta", description="Fetch a bypassed link for the provided URL.")
 async def bypass(interaction: discord.Interaction, url: str):
     """Sends a URL to the executor bypass API and returns the bypassed link."""
@@ -242,12 +577,55 @@ async def bypass(interaction: discord.Interaction, url: str):
                     )
             
 @bot.tree.command(name="genkey")
-async def jdjd_command(interaction: discord.Interaction):
-    """Responds with 'key ' when the /genkey command is invoked."""
-    # Send the response to the channel
-    await interaction.response.send_message("Key is B3f9xT2W8kZ1uL7jP6yV")
-    print("Responded with 'ejjeje' for /jdjd command.")
+async def gen_key(interaction: discord.Interaction, username: str):
+    """Generate a key for a user with a 3-day expiration time."""
 
+    # Generate a secure random key and set it to expire in 3 days
+    generated_key = secrets.token_hex(16)
+    expiration_time = int(time.time()) + AUTO_EXPIRATION
+    new_content = f"{username}:{generated_key}:{expiration_time}\n"
+
+    # Send the first message while the bot works on fetching/updating
+    await interaction.response.send_message("Generating a key for you, is success", ephemeral=False)
+
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json",
+        }
+
+        async with session.get(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", headers=headers) as response:
+            if response.status != 200:
+                await interaction.followup.send(
+                    f"Failed to fetch the existing file. GitHub API response: {await response.text()}",
+                    ephemeral=True
+                )
+                return
+
+            existing_file_data = await response.json()
+            existing_content = base64.b64decode(existing_file_data['content']).decode()
+            sha = existing_file_data['sha']
+
+        # Append new key info to the existing file content
+        updated_content = existing_content + new_content
+        encoded_content = base64.b64encode(updated_content.encode()).decode()
+
+        payload = {
+            "message": f"Add new key for {username}",
+            "content": encoded_content,
+            "sha": sha,
+            "branch": "main"
+        }
+
+        async with session.put(f"https://api.github.com/repos/{REPO_NAME}/contents/{FILE_PATH}", json=payload, headers=headers) as response:
+            if response.status == 200:
+                # Send a second follow-up message with the key and expiration
+                await interaction.followup.send(f"Key for {username}: `{generated_key}` (expires in 3 days)", ephemeral=True)
+            else:
+                await interaction.followup.send(
+                    f"Failed to update the file. GitHub API response: {await response.text()}",
+                    ephemeral=True
+                 )
                 
 
 async def on_ready():
