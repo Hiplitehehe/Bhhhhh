@@ -578,7 +578,7 @@ async def bypass(interaction: discord.Interaction, url: str):
             
 @bot.tree.command(name="genkey", description="Responds with sjjsndnd.")
 async def say_command(interaction: discord.Interaction):
-    await interaction.response.send_message("sjjsndnd")
+    await interaction.response.send_message("Key is B3f9xT2W8kZ1uL7jP6yV")
                 
 @bot.tree.command(name="hggg")
 async def gen_key(interaction: discord.Interaction):
