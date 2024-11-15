@@ -58,4 +58,5 @@ def gamepasscheck():
         return jsonify({"error": f"An error occurred while fetching game pass data: {e}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Set the host to '0.0.0.0' to allow access from any IP address
+    app.run(host='0.0.0.0', port=5000, debug=True)
