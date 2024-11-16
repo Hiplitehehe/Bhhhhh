@@ -2,11 +2,23 @@
   "version": 2,
   "builds": [
     {
+      "src": "index.js", 
+      "use": "@vercel/node"
+    },
+    {
       "src": "api/Hjkkk.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
+    {
+      "src": "/auth",
+      "dest": "/index.js"
+    },
+    {
+      "src": "/oauth2callback",
+      "dest": "/index.js"
+    },
     {
       "src": "/refresh",
       "dest": "/api/Hjkkk.py"
