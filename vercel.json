@@ -3,11 +3,11 @@
   "routes": [
     {
       "src": "/auth",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/oauth2callback",
-      "dest": "/index.js"
+      "dest": "/api/index.js"
     },
     {
       "src": "/refresh",
