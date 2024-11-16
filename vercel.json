@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
+      "src": "api/refresh_token.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/app.py"
+      "src": "/refresh",
+      "dest": "/api/refresh_token.py"
     }
   ]
 }
