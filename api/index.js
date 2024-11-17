@@ -6,7 +6,7 @@ const port = 5000;
 
 // Your OAuth 2.0 credentials
 const CLIENT_ID = '790695082520-7pk2liv3qaca2f7uieqr4eig55k2shre.apps.googleusercontent.com'; // Replace with your Client ID
-const CLIENT_SECRET = 'YOUR_CLIENT_SECRET'; // Replace with your Client Secret
+const CLIENT_SECRET = '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'; // Replace with your Client Secret
 const REDIRECT_URI = 'http://localhost:5000/oauth2callback'; // This must match the one in your Google Console
 
 // Step 1: Redirect user to Google for authorization
