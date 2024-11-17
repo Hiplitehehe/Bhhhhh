@@ -1,24 +1,22 @@
-require('dotenv').config();  // Load environment variables from .env file
-
 const express = require('express');
 const axios = require('axios');
 const querystring = require('querystring');
 const app = express();
-const port = 3090;
+const port = 5000;
 
-// Your OAuth 2.0 credentials from environment variables
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;  // Make sure this matches with Google Cloud Console
+// Your OAuth 2.0 credentials
+const CLIENT_ID = 'YOUR_CLIENT_ID'; // Replace with your Client ID
+const CLIENT_SECRET = 'YOUR_CLIENT_SECRET'; // Replace with your Client Secret
+const REDIRECT_URI = 'http://localhost:5000/oauth2callback'; // This must match the one in your Google Console
 
 // Step 1: Redirect user to Google for authorization
 app.get('/auth', (req, res) => {
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${querystring.stringify({
-        scope: 'https://www.googleapis.com/auth/drive.file',
+        scope: 'https://www.googleapis.com/auth/drive.file', // Adjust scope as necessary
         access_type: 'offline',
         response_type: 'code',
         client_id: CLIENT_ID,
-        redirect_uri: REDIRECT_URI, // This should match the redirect URI in Google Cloud Console
+        redirect_uri: REDIRECT_URI,
     })}`;
     res.redirect(authUrl);
 });
@@ -27,19 +25,23 @@ app.get('/auth', (req, res) => {
 app.get('/oauth2callback', async (req, res) => {
     const code = req.query.code; // Extract the authorization code from the query params
 
+    if (!code) {
+        return res.status(400).send('Missing authorization code');
+    }
+
     try {
-        // Exchange the authorization code for an access token and refresh token
+        // Step 3: Exchange the authorization code for access and refresh tokens
         const response = await axios.post('https://oauth2.googleapis.com/token', querystring.stringify({
             code: code,
             client_id: CLIENT_ID,
             client_secret: CLIENT_SECRET,
-            redirect_uri: REDIRECT_URI, // This should match the redirect URI in Google Cloud Console
+            redirect_uri: REDIRECT_URI,
             grant_type: 'authorization_code',
         }));
 
         // Tokens are returned in the response
         const { access_token, refresh_token, expires_in } = response.data;
-        
+
         console.log('Access Token:', access_token);
         console.log('Refresh Token:', refresh_token);
         console.log('Expires In:', expires_in);
@@ -50,8 +52,9 @@ app.get('/oauth2callback', async (req, res) => {
             refresh_token,
             expires_in
         });
+
     } catch (error) {
-        console.error('Error exchanging code for tokens:', error);
+        console.error('Error exchanging code for tokens:', error.response ? error.response.data : error.message);
         res.status(500).send('Failed to exchange code for tokens');
     }
 });
