@@ -5,7 +5,7 @@
     { "src": "api/generate_code.js", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/generate_code", "dest": "api/generate_code.js" },
+    { "src": "/api/generate_code", "dest": "api/generate_code.py" },
     {
       "src": "/auth",
       "dest": "/api/index.js"
