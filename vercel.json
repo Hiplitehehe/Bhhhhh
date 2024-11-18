@@ -1,9 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/generate_code.py", "use": "@vercel/python" },
-    { "src": "api/generate_code.js", "use": "@vercel/node" }
-  ],
   "routes": [
     { "src": "/api/generate_code", "dest": "api/generate_code.py" },
     {
