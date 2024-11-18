@@ -9,4 +9,4 @@ $repeat[codeLength]{
     $var randomCode = $randomCode$randomChar  // Append to the randomCode
 }
 
-$sendMessage[Your random code: $randomCode]```ERROR: MISSING { } ON $random```
+$sendMessage[Your random code: $randomCode]
