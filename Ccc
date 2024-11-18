@@ -4,9 +4,9 @@ $var codeLength = 8
 $var randomCode = ""
 
 $repeat[codeLength]{
-    $var randomIndex = $random[1;$length[charset]]  // Generate a random index from 1 to the length of charset
-    $var randomChar = $substring[charset;randomIndex-1;randomIndex]  // Get the character at the random index
-    $var randomCode = $randomCode$randomChar  // Append to the randomCode
+    $var randomChar = $randomText[$splitText[;]]
+    $textSplit[charset;]
+    $var randomCode = $randomCode$randomChar
 }
 
-$sendMessage[Your random code: $randomCode]
+$sendMessage[Your random code: $randomCode]```ERROR: MISSING { } ON $random```
