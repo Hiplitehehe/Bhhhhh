@@ -21,7 +21,7 @@
     {
       "src": "/status",
       "dest": "/api/Hjkkk.py"
-    }
+    },
     {
       "src": "/refresh",
       "dest": "/api/Hjkkk.py"
