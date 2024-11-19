@@ -11,6 +11,10 @@
       "dest": "/api/index.js"
     },
     {
+      "src": "/auth",
+      "dest": "/api/index.js"
+    },
+    {
       "src": "/refresh",
       "dest": "/api/Hjkkk.py"
     }
