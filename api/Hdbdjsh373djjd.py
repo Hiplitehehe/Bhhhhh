@@ -36,7 +36,9 @@ def check_website(url):
 def monitor_website():
     url = "https://gelatinous-lopsided-coneflower.glitch.me/"  # Use the provided URL
     while True:
+        print("Checking website...")  # Debugging line
         check_website(url)
+        print("Website check completed.")  # Debugging line
         time.sleep(10)  # Wait for 10 seconds before checking again
 
 @app.route('/monitor', methods=['GET'])
@@ -44,6 +46,7 @@ def monitor():
     return jsonify(website_status)
 
 if __name__ == '__main__':
+    print("Starting monitoring thread...")  # Debugging line
     # Start the monitoring in a background thread
     threading.Thread(target=monitor_website, daemon=True).start()
     app.run(debug=True)
