@@ -3,7 +3,7 @@
   "routes": [
     { "src": "/api/generate_code", "dest": "api/generate_code.py" },
     {
-      "src": "/",
+      "src": "/a",
       "dest": "/api/generate_code.py"
     },
     {
@@ -15,7 +15,7 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/a",
+      "src": "/",
       "dest": "/api/Sjbdjsjd.py"
     },
     {
