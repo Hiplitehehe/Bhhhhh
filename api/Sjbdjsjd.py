@@ -9,7 +9,7 @@ from flask import Flask, jsonify
 # Create a Flask app
 flask_app = Flask(__name__)
 
-@flask_app.route('/', methods=['GET'])
+@flask_app.route('/a', methods=['GET'])
 def status():
     return jsonify({"status": "API is running"})
 
