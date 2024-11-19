@@ -34,7 +34,7 @@ API_BASE_URL = "https://bhhhhh-2.onrender.com/"  # Replace with your actual API 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
-    print("Bot is ready")
+    print("Bot is {bot.user.name} ready")
 
 @bot.tree.command(name="sync_commands")
 async def sync_commands(interaction: discord.Interaction):
