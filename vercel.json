@@ -11,6 +11,10 @@
       "dest": "/api/index.js"
     },
     {
+      "src": "/gfg",
+      "dest": "/api/Jdndn.js"
+    },
+    {
       "src": "/auth",
       "dest": "/api/index.js"
     },
