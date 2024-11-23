@@ -22,6 +22,9 @@
             const status = urlParams.get('status');  // Get the status parameter
             const userId = urlParams.get('userId');  // Get the userId parameter
 
+            console.log('Status:', status);  // Log status
+            console.log('UserId:', userId);  // Log userId
+
             // If task is completed and userId is provided, generate the key
             if (status === 'completed' && userId) {
                 const key = generateKey(userId);
