@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LootLabs Task</title>
+</head>
+<body>
+    <h1>Complete the LootLabs Task to Get Your Key</h1>
+    <button id="startTask">Start Task</button>
+
+    <script>
+        // Button click event to start the task
+        document.getElementById("startTask").onclick = function() {
+            // Redirect to LootLabs task URL
+            window.location.href = "https://lootdest.org/s?21e4561c";  // LootLabs task link
+        };
+
+        // Check for the task completion status after returning from LootLabs
+        window.onload = function() {
+            // Look for the URL parameter `status` after user returns from LootLabs
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            const userId = urlParams.get('userId');  // Assuming you pass a unique user ID
+
+            // If the task is completed, generate a key and display it
+            if (status === 'completed' && userId) {
+                const key = generateKey(userId);
+                document.body.innerHTML = `<h1>Task completed! Your key is: ${key}</h1>`;
+            } else if (status === 'pending') {
+                document.body.innerHTML = `<h1>Task not completed. Please try again later.</h1>`;
+            }
+        };
+
+        // Simple key generation function
+        function generateKey(userId) {
+            return `key-${userId}-${Math.random().toString(36).substring(2, 15)}`;
+        }
+    </script>
+</body>
+</html>
