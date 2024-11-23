@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LootLabs Task</title>
+    <title>LootLabs Task - Complete to Get Your Key</title>
 </head>
 <body>
     <h1>Complete the LootLabs Task to Get Your Key</h1>
@@ -18,12 +18,10 @@
 
         // Check for the task completion status after returning from LootLabs
         window.onload = function() {
-            // Look for the URL parameter `status` after user returns from LootLabs
             const urlParams = new URLSearchParams(window.location.search);
             const status = urlParams.get('status');
             const userId = urlParams.get('userId');  // Assuming you pass a unique user ID
 
-            // If the task is completed, generate a key and display it
             if (status === 'completed' && userId) {
                 const key = generateKey(userId);
                 document.body.innerHTML = `<h1>Task completed! Your key is: ${key}</h1>`;
