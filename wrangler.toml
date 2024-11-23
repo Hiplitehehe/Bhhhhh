@@ -2,18 +2,5 @@ name = "my-worker"
 type = "javascript"
 
 [env.production]
-route = "https://example.com/*"
-zone_id = "YOUR_ZONE_ID"
-
-[env.staging]
-route = "https://staging.example.com/*"
-zone_id = "YOUR_ZONE_ID"
-
-[build]
-command = "npm install && npm run build" # (If you need a build step, otherwise remove this)
-
-[workers_dev]
-compatibility_flags = []
-
-[account]
-id = "YOUR_ACCOUNT_ID"
+route = "https://bhhhhh.pages.dev/*"  # Worker route for this Pages site
+zone_id = "467799c66d4f5f0098477cfa04e46706"  # Your Cloudflare Zone ID
