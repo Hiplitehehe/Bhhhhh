@@ -13,20 +13,23 @@
         // Button click event to start the task
         document.getElementById("startTask").onclick = function() {
             // Redirect to LootLabs task URL
-            window.location.href = "https://lootdest.org/s?21e4561c";  // LootLabs task link
+            window.location.href = "https://lootdest.org/s?3147b7ea";  // LootLabs task link
         };
 
         // Check for the task completion status after returning from LootLabs
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const status = urlParams.get('status');
-            const userId = urlParams.get('userId');  // Assuming you pass a unique user ID
+            const status = urlParams.get('status');  // Get the status parameter
+            const userId = urlParams.get('userId');  // Get the userId parameter
 
+            // If task is completed and userId is provided, generate the key
             if (status === 'completed' && userId) {
                 const key = generateKey(userId);
                 document.body.innerHTML = `<h1>Task completed! Your key is: ${key}</h1>`;
             } else if (status === 'pending') {
                 document.body.innerHTML = `<h1>Task not completed. Please try again later.</h1>`;
+            } else {
+                document.body.innerHTML = `<h1>Error: Task status not recognized.</h1>`;
             }
         };
 
