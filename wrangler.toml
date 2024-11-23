@@ -1,7 +1,19 @@
 name = "my-worker"
-main = "api/index.js"
-compatibility_date = "2024-11-20"  # Update to the current date
+type = "javascript"
 
 [env.production]
-account_id = "your-cloudflare-account-id"
-route = ""  # Optional: Add your custom domain or leave blank for workers.dev
+route = "https://example.com/*"
+zone_id = "YOUR_ZONE_ID"
+
+[env.staging]
+route = "https://staging.example.com/*"
+zone_id = "YOUR_ZONE_ID"
+
+[build]
+command = "npm install && npm run build" # (If you need a build step, otherwise remove this)
+
+[workers_dev]
+compatibility_flags = []
+
+[account]
+id = "YOUR_ACCOUNT_ID"
