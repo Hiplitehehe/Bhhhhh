@@ -1,27 +1,24 @@
-export async function onRequest(context) {
-  const { request } = context;
-
-  // Check if the request method is GET
-  if (request.method === 'GET') {
-    // Generate a simple API key (you can customize this generation logic)
-    const apiKey = generateApiKey();
-
-    // Return the API key in a JSON response
-    return new Response(
-      JSON.stringify({ apiKey }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  } else {
-    // Return a 404 if method is not GET
-    return new Response('Not Found', { status: 404 });
-  }
+// Simulate API Key generation logic
+function generateApiKey(userId) {
+  // Create a simple key based on userId (you could use a more secure method in production)
+  return `key-${userId}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Function to generate a simple API key (adjust as needed)
-function generateApiKey() {
-  return Math.random().toString(36).substring(2, 15);
+export async function onRequest(context) {
+  const { request } = context;
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  // Validate userId
+  if (!userId) {
+    return new Response('userId is required', { status: 400 });
+  }
+
+  // Generate an API key for the user
+  const apiKey = generateApiKey(userId);
+
+  // Respond with the API key
+  return new Response(JSON.stringify({ apiKey }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
