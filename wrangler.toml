@@ -2,5 +2,5 @@ name = "my-worker"
 type = "javascript"
 
 [env.production]
-route = "https://bhhhhh.pages.dev/*"  # Worker route for this Pages site
+route = "https://a.hiplitehehe.workers.dev/*"  # Worker route for this Pages site
 zone_id = "467799c66d4f5f0098477cfa04e46706"  # Your Cloudflare Zone ID
