@@ -1,3 +1,5 @@
 {
-  "type": "Test type dvgha"
+  "types": [
+    "Test type dvgha"
+  ]
 }
