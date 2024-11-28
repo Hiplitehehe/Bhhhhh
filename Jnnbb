@@ -2,6 +2,7 @@
   "types": [
     "Test type dvgha",
     "Test type dvgha",
+    "NewType",
     "NewType"
   ]
 }
